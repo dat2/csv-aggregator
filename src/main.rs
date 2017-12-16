@@ -1,10 +1,15 @@
 extern crate clap;
 extern crate failure;
 extern crate glob;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_yaml;
 
 use clap::{Arg, App};
 use failure::Error;
 use glob::glob;
+use std::fs::File;
 use std::path::PathBuf;
 
 #[derive(Debug)]
@@ -14,13 +19,13 @@ enum OutputMode {
 }
 
 #[derive(Debug)]
-struct Config {
+struct Arguments {
   output_mode: OutputMode,
   config_file: PathBuf,
   input_files: Vec<PathBuf>
 }
 
-fn parse_args() -> Result<Config, Error> {
+fn parse_args() -> Result<Arguments, Error> {
   let matches = App::new("csv-aggregator")
     .version("0.1")
     .author("Nick D. <nickdujay@gmail.com>")
@@ -57,15 +62,48 @@ fn parse_args() -> Result<Config, Error> {
     .map(|r| r.unwrap())
     .collect();
 
-  Ok(Config {
+  Ok(Arguments {
     output_mode: output_mode,
     config_file: config_file,
     input_files: input_files
   })
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(tag = "type")]
+enum Field {
+  Date {
+    name: String,
+    format: String
+  },
+  Number {
+    name: String
+  }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+enum FieldKind {
+  Field(Field),
+  Name(String)
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Config {
+  fields: Vec<FieldKind>,
+  sort: Option<String>,
+}
+
+fn parse_config(path: &PathBuf) -> Result<Config, Error> {
+  let file = File::open(path)?;
+  let config = serde_yaml::from_reader(file)?;
+  Ok(config)
+}
+
 fn run() -> Result<(), Error> {
-  let config = parse_args()?;
+  let args = parse_args()?;
+
+  let config = parse_config(&args.config_file);
   println!("{:?}", config);
   Ok(())
 }

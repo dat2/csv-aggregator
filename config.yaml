@@ -1,0 +1,10 @@
+fields:
+  - name: 'date'
+    type: 'Date'
+    format: 'YYYY/MM/DD'
+  - name: amount
+    type: 'Number'
+  - 'account'
+  - 'desc'
+  - 'desc2'
+sort: 'date'

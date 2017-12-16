@@ -4,16 +4,16 @@ A tool to help aggregate csvs
 ## Tutorial
 - Create a file `config.yaml`
 ```yaml
-- fields: ['date', 'amount', 'account', 'desc', 'desc2']
+fields:
   - name: 'date'
-    type: 'date'
+    type: 'Date'
     format: 'YYYY/MM/DD'
   - name: amount
-    type: 'number'
-  - account
-  - desc
-  - desc2
-- sort: 'date'
+    type: 'Number'
+  - 'account'
+  - 'desc'
+  - 'desc2'
+sort: 'date'
 ```
 - Create a directory `csvs` with the following files:
 
