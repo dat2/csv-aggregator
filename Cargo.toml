@@ -1,6 +1,10 @@
 [package]
+authors = ["Nicholas Dujay <nickdujay@gmail.com>"]
 name = "csv-aggregator"
 version = "0.1.0"
-authors = ["Nicholas Dujay <nickdujay@gmail.com>"]
 
 [dependencies]
+clap = "2.29.0"
+csv = "0.15.0"
+failure = "0.1.1"
+glob = "0.2.11"

@@ -29,7 +29,7 @@ A tool to help aggregate csvs
 ```
 "2017/11/26", 5, "liabilities:credit card", "taco bell", ""
 ```
-- Run `csv-aggregator -c config.yaml 'csvs/*.csv' -o all.csv`
+- Run `csv-aggregator -c config.yaml -o all.csv 'csvs/*.csv'`
 
 The output should be:
 `all.csv`
