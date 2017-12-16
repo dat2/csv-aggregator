@@ -16,6 +16,7 @@ A tool to help aggregate csvs
 - sort: 'date'
 ```
 - Create a directory `csvs` with the following files:
+
 `csvs/a.csv`
 ```
 "2017/11/30", -1, "assets:chequing", "bill payment", "credit card"
