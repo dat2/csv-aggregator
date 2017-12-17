@@ -2,12 +2,13 @@
 
 extern crate chrono;
 extern crate clap;
+#[macro_use]
+extern crate combine;
 extern crate csv;
+#[macro_use]
 extern crate failure;
 extern crate glob;
 extern crate gmp;
-#[macro_use]
-extern crate nom;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -32,6 +33,7 @@ fn run() -> Result<(), Error> {
     Some(ref filters) => Some(parse_filter(filters)?),
     None => None
   };
+  println!("{:?}", filter);
   let aggregated = parse_and_aggregate_csvs(&args.input_files, &config, &filter)?;
   let result = transform_aggregated_csv(&config, &aggregated);
   write_aggregated_csv(result)?;
