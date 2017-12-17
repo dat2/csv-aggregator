@@ -17,6 +17,7 @@ extern crate serde_yaml;
 mod args;
 mod config;
 mod filter;
+mod naive_float;
 mod parser;
 mod records;
 
