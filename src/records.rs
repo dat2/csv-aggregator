@@ -2,6 +2,7 @@ use chrono::prelude::*;
 use config::{Config, ConfigField, TypedField};
 use csv::{QuoteStyle, ReaderBuilder, StringRecord, WriterBuilder};
 use failure::Error;
+use filter::Filter;
 use gmp::mpf::Mpf;
 use serde::ser::{Serialize, Serializer};
 use std::cmp::Ordering;
@@ -108,13 +109,16 @@ impl SortParams {
   }
 }
 
-pub fn parse_and_aggregate_csvs(paths: &[PathBuf], config: &Config) -> Result<Vec<Record>, Error> {
+pub fn parse_and_aggregate_csvs(paths: &[PathBuf], config: &Config, filter: Option<Filter>) -> Result<Vec<Record>, Error> {
   let mut result = Vec::new();
 
   for path in paths {
     let mut reader = ReaderBuilder::new().has_headers(false).from_path(path)?;
-    for record in reader.records() {
-      result.push(Record::new(config, &record?)?);
+    for string_record in reader.records() {
+      let string_record = string_record?;
+      if filter.clone().map(|f| f.matches(&string_record)).unwrap_or(true) {
+        result.push(Record::new(config, &string_record)?);
+      }
     }
   }
 
