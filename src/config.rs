@@ -39,6 +39,7 @@ impl ConfigField {
 pub struct Config {
   pub fields: Vec<ConfigField>,
   pub sort: Option<String>,
+  pub filter: Option<Vec<String>>
 }
 
 impl Config {
