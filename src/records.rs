@@ -3,13 +3,14 @@ use config::{Config, ConfigField, TypedField};
 use csv::{QuoteStyle, ReaderBuilder, StringRecord, WriterBuilder};
 use failure::Error;
 use filter::Filter;
-use gmp::mpf::Mpf;
+use float_cmp::{ApproxEqUlps, ApproxOrdUlps};
 use serde::ser::{Serialize, Serializer};
 use std::cmp::Ordering;
 use std::io;
 use std::path::PathBuf;
+use std::str::FromStr;
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Record {
   fields: Vec<Field>,
   sort_params: Option<SortParams>,
@@ -57,10 +58,48 @@ impl Record {
   }
 }
 
-#[derive(Clone, PartialEq, PartialOrd, Eq, Ord)]
+#[derive(Clone, Debug)]
+struct NaiveFloat {
+  inner: f64
+}
+
+impl PartialEq for NaiveFloat {
+  fn eq(&self, other: &NaiveFloat) -> bool {
+    self.inner.approx_eq_ulps(&other.inner, 2)
+  }
+}
+impl Eq for NaiveFloat {}
+
+impl Ord for NaiveFloat {
+  fn cmp(&self, other: &NaiveFloat) -> Ordering {
+    self.inner.approx_cmp(&other.inner, 2)
+  }
+}
+impl PartialOrd for NaiveFloat {
+  fn partial_cmp(&self, other: &NaiveFloat) -> Option<Ordering> {
+    Some(self.cmp(other))
+  }
+}
+
+impl FromStr for NaiveFloat {
+  type Err = ::std::num::ParseFloatError;
+  fn from_str(s: &str) -> Result<Self, Self::Err> {
+    f64::from_str(s).map(|f| NaiveFloat { inner: f })
+  }
+}
+
+impl Serialize for NaiveFloat {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: Serializer
+  {
+    self.inner.serialize(serializer)
+  }
+}
+
+#[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Serialize)]
 enum Field {
   Date(NaiveDate),
-  Number(Mpf),
+  Number(NaiveFloat),
   String(String),
 }
 
@@ -73,27 +112,11 @@ impl Field {
             NaiveDate::parse_from_str(value, format)?,
           )),
           TypedField::Number { .. } => {
-            let mut f = Mpf::zero();
-            f.set_from_str(value, 10);
-            Ok(Field::Number(f))
+            Ok(Field::Number(value.parse()?))
           }
         }
       }
       ConfigField::Basic(_) => Ok(Field::String(value.to_owned())),
-    }
-  }
-}
-
-impl Serialize for Field {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: Serializer
-  {
-    match *self {
-      Field::Date(n) => n.serialize(serializer),
-      Field::Number(ref mpf) => serializer.serialize_str(
-        mpf.clone().get_str(64, 10, &mut 0).as_ref()
-      ),
-      Field::String(ref s) => s.serialize(serializer)
     }
   }
 }
