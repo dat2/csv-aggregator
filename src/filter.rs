@@ -1,6 +1,5 @@
 use csv::StringRecord;
 use failure::Error;
-use nom::space;
 
 #[derive(Clone, Debug)]
 pub struct Filter {
@@ -28,7 +27,7 @@ impl Expression {
     match *self {
       Expression::Empty => true,
       Expression::Match(ref substring) => {
-        record.iter().find(|&field| field.contains(substring)).is_some()
+        record.iter().any(|field| field.contains(substring))
       },
       Expression::Not(ref subexpr) => {
         !subexpr.matches(record)
@@ -50,24 +49,29 @@ impl Expression {
   }
 }
 
-fn new_match(t: (Option<&[u8]>, &[u8])) -> Expression {
-  let subexpr = Expression::Match(String::from_utf8(t.1.to_vec()).unwrap());
-  if let Some(_) = t.0 {
-    Expression::Not(Box::new(subexpr))
-  } else {
-    subexpr
-  }
+fn new_match(bytes: &[u8]) -> Expression {
+  Expression::Match(String::from_utf8(bytes.to_vec()).unwrap())
 }
 
 named!(match_expr<&[u8], Expression>,
   map!(
-    do_parse!(
-      tag: opt!(tag!("not")) >>
-      many0!(space) >>
-      expr: delimited!(char!('\''), take_until!("'"), char!('\'')) >>
-      (tag, expr)
-    ),
+    ws!(delimited!(char!('\''), take_until!("'"), char!('\''))),
     new_match
+  )
+);
+
+fn new_not(expr: Expression) -> Expression {
+  Expression::Not(Box::new(expr))
+}
+
+named!(not_expr<&[u8], Expression>,
+  map!(
+    ws!(do_parse!(
+      tag!("not") >>
+      expr: expr >>
+      (expr)
+    )),
+    new_not
   )
 );
 
@@ -77,59 +81,31 @@ fn new_if(t: (Expression, Expression)) -> Expression {
 
 named!(if_expr<&[u8], Expression>,
   map!(
-    do_parse!(
+    ws!(do_parse!(
       tag!("if") >>
-      many1!(space) >>
       cond: expr >>
       tag!("then") >>
-      many1!(space) >>
       subexpr: expr >>
       (cond, subexpr)
-    ),
+    )),
     new_if
   )
 );
 
-named!(expr<&[u8], Expression>,
-  do_parse!(
-    expr: alt!(if_expr | match_expr) >>
-    many0!(space) >>
-    (expr)
-  )
-);
+named!(expr<&[u8], Expression>, (alt!(match_expr | not_expr | if_expr));
 
-named!(or_expr<&[u8], Expression>,
+named!(binary_op<&[u8], Expression>,
   do_parse!(
-    left: expr >>
+    init: expr >>
     fold: fold_many0!(
-      do_parse!(
-        tag!("or") >>
-        many1!(space) >>
-        expr: expr >>
-        (expr)
-      ),
-      left,
-      |acc: Expression, item: Expression| {
-        Expression::Or(Box::new(acc), Box::new(item))
-      }
-    ) >>
-    (fold)
-  )
-);
-
-named!(and_expr<&[u8], Expression>,
-  do_parse!(
-    left: expr >>
-    fold: fold_many0!(
-      do_parse!(
-        tag!("and") >>
-        many1!(space) >>
-        expr: expr >>
-        (expr)
-      ),
-      left,
-      |acc: Expression, item: Expression| {
-        Expression::And(Box::new(acc), Box::new(item))
+      ws!(pair!(alt!(tag!("or") | tag!("and")), expr)),
+      init,
+      |acc: Expression, (op, item): (&[u8], Expression)| {
+        if op == b"or" {
+          Expression::Or(Box::new(acc), Box::new(item))
+        } else {
+          Expression::And(Box::new(acc), Box::new(item))
+        }
       }
     ) >>
     (fold)
@@ -138,7 +114,7 @@ named!(and_expr<&[u8], Expression>,
 
 named!(root_expr<&[u8], Expression>,
   do_parse!(
-    expr: dbg_dmp!( alt!(and_expr | or_expr | expr) ) >>
+    expr: alt!(binary_op | expr) >>
     eof!() >>
     (expr)
   )

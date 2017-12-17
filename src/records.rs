@@ -109,7 +109,7 @@ impl SortParams {
   }
 }
 
-pub fn parse_and_aggregate_csvs(paths: &[PathBuf], config: &Config, filter: Option<Filter>) -> Result<Vec<Record>, Error> {
+pub fn parse_and_aggregate_csvs(paths: &[PathBuf], config: &Config, filter: &Option<Filter>) -> Result<Vec<Record>, Error> {
   let mut result = Vec::new();
 
   for path in paths {
