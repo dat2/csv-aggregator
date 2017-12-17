@@ -60,8 +60,8 @@ fields:
   - 'desc2'
 sort: 'date'
 +filter:
-+  - if 'chequing' in account then not 'transfer from savings'
-+  - if 'savings' in account then not 'transfer from savings'
++  - if 'assets:chequing' then not 'transfer from savings'
++  - if 'assets:savings' then not 'transfer from savings'
 ```
 - Create a directory `csvs` with the following files:
 
@@ -85,4 +85,38 @@ The output should be:
 "2017/11/30",-1,"assets:chequing","bill payment","credit card"
 "2017/11/30",0.5,"assets:savings","interest","interested received"
 "2017/12/02",-1,"assets:chequing","transfer","transfer to savings account"
+```
+
+### Explanation
+Filters run before csvs get merged into one. Every record that matches the filter,
+will be accepted and passed through to the aggregated csv.
+
+A quoted word `'chequing'` matches any field in the csv record.
+eg. all the below match `'chequing'`
+```csv
+# "transfer to chequing account" matches
+"2017/11/28",-2,"assets:savings","transfer","transfer to chequing account"
+# "assets:chequing" matches
+"2017/11/28",-2,"assets:chequing","transfer","transfer to savings account"
+# "transfer to chequing account" matches
+"2017/11/28",-2,"liabilities:credit","transfer","transfer to chequing account"
+```
+
+`not` reverses the result of the match:
+eg. all the below matches `not 'chequing'`
+```csv
+# no fields match 'chequing'
+"2017/11/28",-2,"assets:saving","interest","interest received"
+# no fields match 'chequing'
+"2017/11/28",-2,"liabilities:credit","best buy","buy something"
+```
+
+`if <condition> then <match>` will return the result of `<match>` if `<condition>`
+matches:
+eg. all the below matches `if 'assets:chequing' then 'transfer'`
+```csv
+# "assets:chequing" matches, so we check if "transfer" matches (it does)
+"2017/11/28",-2,"assets:chequing","transfer","transfer to savings account"
+# "assets:chequing" matches, so we check if "transfer" matches (it does)
+"2017/11/30",-2,"assets:chequing","transfer","transfer to credit card"
 ```
