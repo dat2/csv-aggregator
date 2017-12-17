@@ -7,7 +7,7 @@ A tool to help aggregate csvs
 fields:
   - name: 'date'
     type: 'Date'
-    format: 'YYYY/MM/DD'
+    format: '%Y/%m/%d'
   - name: amount
     type: 'Number'
   - 'account'
@@ -52,7 +52,7 @@ csv.
 fields:
   - name: 'date'
     type: 'Date'
-    format: 'YYYY/MM/DD'
+    format: '%Y/%m/%d'
   - name: amount
     type: 'Number'
   - 'account'
@@ -60,8 +60,8 @@ fields:
   - 'desc2'
 sort: 'date'
 +filter:
-+  - if 'assets:chequing' then not 'transfer from savings'
-+  - if 'assets:savings' then not 'transfer from savings'
++  - "if 'assets:chequing' then not 'transfer from savings'"
++  - if 'assets:savings' then not 'transfer from chequing'"
 ```
 - Create a directory `csvs` with the following files:
 
