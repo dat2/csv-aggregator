@@ -66,11 +66,7 @@ fn new_not(expr: Expression) -> Expression {
 
 named!(not_expr<&[u8], Expression>,
   map!(
-    ws!(do_parse!(
-      tag!("not") >>
-      expr: expr >>
-      (expr)
-    )),
+    ws!(preceded!(tag!("not"), expr)),
     new_not
   )
 );
@@ -92,7 +88,7 @@ named!(if_expr<&[u8], Expression>,
   )
 );
 
-named!(expr<&[u8], Expression>, (alt!(match_expr | not_expr | if_expr));
+named!(expr<&[u8], Expression>, alt!(match_expr | not_expr | if_expr));
 
 named!(binary_op<&[u8], Expression>,
   do_parse!(
@@ -113,10 +109,9 @@ named!(binary_op<&[u8], Expression>,
 );
 
 named!(root_expr<&[u8], Expression>,
-  do_parse!(
-    expr: alt!(binary_op | expr) >>
-    eof!() >>
-    (expr)
+  terminated!(
+    alt!(binary_op | expr),
+    eof!()
   )
 );
 
@@ -126,10 +121,10 @@ pub fn parse_expression(expression: &str) -> Result<Expression, Error> {
 }
 
 pub fn parse_filter(filters: &[String]) -> Result<Filter, Error> {
-  let mut expression = Expression::Not(Box::new(Expression::Empty));
+  let mut expression = Expression::Empty;
   for filter in filters {
     let subexpr = parse_expression(filter)?;
-    expression = Expression::Or(Box::new(expression), Box::new(subexpr));
+    expression = Expression::And(Box::new(expression), Box::new(subexpr));
   }
   Ok(Filter { expression: expression })
 }
