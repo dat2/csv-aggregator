@@ -124,8 +124,9 @@ pub fn parse_and_aggregate_csvs(paths: &[PathBuf], config: &Config) -> Result<Ve
 }
 
 pub fn transform_aggregated_csv(_config: &Config, rows: &[Record]) -> Vec<Record> {
-  // sort
-  rows.to_vec()
+  let mut result = rows.to_vec();
+  result.sort();
+  result
 }
 
 pub fn write_aggregated_csv(output_mode: OutputMode, rows: Vec<Record>) -> Result<(), Error> {

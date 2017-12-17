@@ -2,7 +2,7 @@ fields:
   - name: 'date'
     type: 'Date'
     format: '%Y/%m/%d'
-  - name: amount
+  - name: 'amount'
     type: 'Number'
   - 'account'
   - 'desc'
