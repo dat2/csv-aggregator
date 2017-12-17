@@ -1,9 +1,10 @@
 use chrono::prelude::*;
 use config::{Config, ConfigField, TypedField};
-use csv::{QuoteStyle, ReaderBuilder, StringRecord, WriterBuilder};
+use csv::{QuoteStyle, ReaderBuilder, StringRecord, Terminator, WriterBuilder};
 use failure::Error;
 use filter::Filter;
 use naive_float::NaiveFloat;
+use serde::ser::{Serialize, Serializer};
 use std::cmp::Ordering;
 use std::io;
 use std::path::PathBuf;
@@ -56,9 +57,9 @@ impl Record {
   }
 }
 
-#[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Serialize)]
+#[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
 enum Field {
-  Date(NaiveDate),
+  Date { date: NaiveDate, format: String },
   Number(NaiveFloat),
   String(String),
 }
@@ -68,15 +69,28 @@ impl Field {
     match *config_field {
       ConfigField::Typed(ref f) => {
         match *f {
-          TypedField::Date { ref format, .. } => Ok(Field::Date(
-            NaiveDate::parse_from_str(value, format)?,
-          )),
+          TypedField::Date { ref format, .. } => Ok(Field::Date{
+            date: NaiveDate::parse_from_str(value, format)?,
+            format: format.clone()
+          }),
           TypedField::Number { .. } => {
             Ok(Field::Number(value.parse()?))
           }
         }
       }
       ConfigField::Basic(_) => Ok(Field::String(value.to_owned())),
+    }
+  }
+}
+
+impl Serialize for Field {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: Serializer
+  {
+    match *self {
+      Field::Date { ref date, ref format } => date.format(format).to_string().serialize(serializer),
+      Field::Number(ref n) => n.serialize(serializer),
+      Field::String(ref s) => s.serialize(serializer)
     }
   }
 }
@@ -116,7 +130,8 @@ pub fn transform_aggregated_csv(_config: &Config, rows: &[Record]) -> Vec<Record
 
 pub fn write_aggregated_csv(rows: Vec<Record>) -> Result<(), Error> {
   let mut writer = WriterBuilder::new()
-    .quote_style(QuoteStyle::NonNumeric)
+    .quote_style(QuoteStyle::Always)
+    .terminator(Terminator::CRLF)
     .from_writer(io::stdout());
   for row in rows {
     writer.serialize(row.fields)?;
