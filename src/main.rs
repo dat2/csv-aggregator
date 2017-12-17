@@ -16,12 +16,13 @@ extern crate serde_yaml;
 mod args;
 mod config;
 mod filter;
+mod parser;
 mod records;
 
 use args::parse_args;
 use config::parse_config;
 use failure::Error;
-use filter::parse_filter;
+use parser::parse_filter;
 use records::{parse_and_aggregate_csvs, transform_aggregated_csv, write_aggregated_csv};
 
 fn run() -> Result<(), Error> {
