@@ -6,6 +6,8 @@ extern crate csv;
 extern crate failure;
 extern crate glob;
 extern crate gmp;
+#[macro_use]
+extern crate nom;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;

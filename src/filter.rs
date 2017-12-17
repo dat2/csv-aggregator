@@ -44,6 +44,17 @@ impl Expression {
   }
 }
 
+fn new_match(bytes: &[u8]) -> Expression {
+  Expression::Match(String::from_utf8(bytes.to_vec()).unwrap())
+}
+
+named!(match_expr <&[u8], Expression>,
+  map!(
+    delimited!(tag!("'"), take_until!("'"), tag!("'")),
+    new_match
+  )
+);
+
 pub fn parse_expression(expression: &str) -> Expression {
   Expression::Empty
 }
