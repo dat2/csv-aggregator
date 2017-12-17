@@ -19,22 +19,21 @@ sort: 'date'
 
 `csvs/a.csv`
 ```
-"2017/11/30", -1, "assets:chequing", "bill payment", "credit card"
+"2017/11/30",-1,"assets:chequing","bill payment","credit card"
 ```
 `csvs/b.csv`
 ```
-"2017/11/28", 2, "assets:savings", "transfer", "transfer to chequing account"
+"2017/11/28",2,"assets:savings","transfer","transfer to chequing account"
 ```
 `csvs/c.csv`
 ```
-"2017/11/26", 5, "liabilities:credit card", "taco bell", ""
+"2017/11/26",5,"liabilities:credit card","taco bell",""
 ```
-- Run `csv-aggregator -c config.yaml -o all.csv 'csvs/*.csv'`
+- Run `csv-aggregator -c config.yaml 'csvs/*.csv'`
 
 The output should be:
-`all.csv`
 ```
-"2017/11/26", 5, "liabilities:credit card", "taco bell", ""
-"2017/11/28", 2, "assets:savings", "transfer", "transfer to chequing account"
-"2017/11/30", -1, "assets:chequing", "bill payment", "credit card"
+"2017/11/26",5,"liabilities:credit card","taco bell",""
+"2017/11/28",2,"assets:savings","transfer","transfer to chequing account"
+"2017/11/30",-1,"assets:chequing","bill payment","credit card"
 ```
