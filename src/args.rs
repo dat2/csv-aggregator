@@ -1,6 +1,7 @@
 use clap::{Arg, App};
 use failure::Error;
 use glob::glob;
+use std::env;
 use std::path::PathBuf;
 
 #[derive(Debug)]
@@ -26,7 +27,11 @@ pub fn parse_args() -> Result<Arguments, Error> {
     .get_matches();
 
   let config_file = matches.value_of("config").unwrap_or("config.yaml").into();
-  let input_files = glob(matches.value_of("input").unwrap())?
+  let mut glob_path = matches.value_of("input").unwrap().to_owned();
+  if let Some(path) = env::home_dir() {
+    glob_path = glob_path.replace("~", path.to_str().unwrap());
+  }
+  let input_files = glob(&glob_path)?
     .filter(|r| r.is_ok())
     .map(|r| r.unwrap())
     .collect();
