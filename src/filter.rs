@@ -44,11 +44,11 @@ impl Expression {
   }
 }
 
-pub fn parse_expression(expression: String) -> Expression {
+pub fn parse_expression(expression: &str) -> Expression {
   Expression::Empty
 }
 
-pub fn parse_filter(filters: Vec<String>) -> Filter {
+pub fn parse_filter(filters: &[String]) -> Filter {
   let mut expression = Expression::Empty;
   for filter in filters {
     let subexpr = parse_expression(filter);

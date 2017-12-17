@@ -25,7 +25,10 @@ use records::{parse_and_aggregate_csvs, transform_aggregated_csv, write_aggregat
 fn run() -> Result<(), Error> {
   let args = parse_args()?;
   let config = parse_config(&args.config_file)?;
-  let filter = config.filter.clone().map(parse_filter);
+  let filter = match &config.filter {
+    &Some(ref filters) => Some(parse_filter(filters)),
+    &None => None
+  };
   let aggregated = parse_and_aggregate_csvs(&args.input_files, &config, filter)?;
   let result = transform_aggregated_csv(&config, &aggregated);
   write_aggregated_csv(result)?;
