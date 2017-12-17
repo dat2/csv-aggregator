@@ -25,7 +25,7 @@ fn run() -> Result<(), Error> {
   let config = parse_config(&args.config_file)?;
   let aggregated = parse_and_aggregate_csvs(&args.input_files, &config)?;
   let result = transform_aggregated_csv(&config, &aggregated);
-  write_aggregated_csv(args.output_mode, result)?;
+  write_aggregated_csv(result)?;
   Ok(())
 }
 

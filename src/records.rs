@@ -1,4 +1,3 @@
-use args::OutputMode;
 use chrono::prelude::*;
 use config::{Config, ConfigField, TypedField};
 use csv::{QuoteStyle, ReaderBuilder, StringRecord, WriterBuilder};
@@ -6,8 +5,7 @@ use failure::Error;
 use gmp::mpf::Mpf;
 use serde::ser::{Serialize, Serializer};
 use std::cmp::Ordering;
-use std::io::{self, Write};
-use std::fs::File;
+use std::io;
 use std::path::PathBuf;
 
 #[derive(Clone, PartialEq, Eq)]
@@ -129,14 +127,10 @@ pub fn transform_aggregated_csv(_config: &Config, rows: &[Record]) -> Vec<Record
   result
 }
 
-pub fn write_aggregated_csv(output_mode: OutputMode, rows: Vec<Record>) -> Result<(), Error> {
-  let writer: Box<Write> = match output_mode {
-    OutputMode::File { path } => Box::new(File::open(path)?),
-    OutputMode::Stdout => Box::new(io::stdout()),
-  };
+pub fn write_aggregated_csv(rows: Vec<Record>) -> Result<(), Error> {
   let mut writer = WriterBuilder::new()
     .quote_style(QuoteStyle::NonNumeric)
-    .from_writer(writer);
+    .from_writer(io::stdout());
   for row in rows {
     writer.serialize(row.fields)?;
   }
