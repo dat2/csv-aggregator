@@ -28,7 +28,7 @@ fn run() -> Result<(), Error> {
   let args = parse_args()?;
   let config = parse_config(&args.config_file)?;
   let filter = match &config.filter {
-    &Some(ref filters) => Some(parse_filter(filters)),
+    &Some(ref filters) => Some(parse_filter(filters)?),
     &None => None
   };
   let aggregated = parse_and_aggregate_csvs(&args.input_files, &config, filter)?;
